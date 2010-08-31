@@ -34,3 +34,4 @@ collector.on('data', function(data){
 
 setInterval(function(){ collector.addData('d1', Math.random() * 10); }, 200);
 setInterval(function(){ collector.addData('d2', 3); }, 300);
+setInterval(function(){ collector.addData('d3_ok', (Math.random() * 10) > 6 ? 1 : 0); }, 100);
