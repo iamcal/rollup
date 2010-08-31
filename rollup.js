@@ -4,8 +4,10 @@ var Collector = require('./lib/collector').Collector;
 
 var config = {
 	port		: 8464,
+
 	bucket_ms	: 1000 * 10, // 10s
 	check_ms	: 1000,
+	trim_top	: 15, // top values will be 85th percentile
 };
 
 
@@ -30,5 +32,5 @@ collector.on('data', function(data){
 	console.log(sys.inspect(data, false, 4));
 });
 
-setInterval(function(){ collector.addData('d1', 2); }, 200);
+setInterval(function(){ collector.addData('d1', Math.random() * 10); }, 200);
 setInterval(function(){ collector.addData('d2', 3); }, 300);
