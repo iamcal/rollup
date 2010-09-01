@@ -1,6 +1,7 @@
 var dgram = require('dgram');
 var sys = require('sys');
 var Collector = require('./lib/collector').Collector;
+var RRDWriter = require('./lib/rrdwriter').RRDWriter;
 
 var config = {
 	udp_port	: 8464,		// port for UDP server to listen on
@@ -9,7 +10,11 @@ var config = {
 	check_ms	: 1000,		// 1s : how often to check for completed buckets. don't need to modify this
 	trim_top	: 85,		// averages will be the bottom 85th percentile
 
-	debug		: true,		// sollect some fake debug stats
+	debug_collect	: true,		// collect some fake debug stats
+	debug_dump	: false,	// dump all rollups to console
+
+	rrd_root	: './rrds',				// folder to put rrd files in
+	rrdtool		: '/opt/rrdtool-1.4.4/bin/rrdtool',	// rrdtool binary. this is the default install location. srsly?
 };
 
 
@@ -37,14 +42,27 @@ server.bind(config.udp_port);
 //
 // this handler will get called whenever we get some
 // data rolled up. it will have already been processed
-// into a format we can smush into RRD/whatever
+// into a format we can smush into RRD/whatever.
 //
 
 collector.on('data', function(data){
-
-	console.log('GOT SOMETHING!');
-	console.log(sys.inspect(data, false, 4));
+	if (config.debug_dump){
+		console.log('GOT SOMETHING!');
+		console.log(sys.inspect(data, false, 4));
+	}else{
+		sys.print('.');
+	}
 });
+
+
+//
+// here we're hooking it up directly to an RRD writer
+// that knows how to deal with rolled up data events.
+// nice!
+//
+
+var writer = new RRDWriter(config);
+collector.on('data', writer.store);
 
 
 //
@@ -53,8 +71,8 @@ collector.on('data', function(data){
 // started.
 //
 
-if (config.debug){
-	setInterval(function(){ collector.addData('debug_1', Math.random() * 10); }, 200);
+if (config.debug_collect){
+	setInterval(function(){ collector.addData('debug_1', Math.random() * 1000); }, 200);
 	setInterval(function(){ collector.addData('debug_2', 3); }, 300);
 	setInterval(function(){ collector.addData('debug_3_ok', (Math.random() * 10) > 6 ? 1 : 0); }, 100);
 }
